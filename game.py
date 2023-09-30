@@ -1,11 +1,13 @@
 import pygame
+import os
 from pygame.locals import *
 
 class Cubert(pygame.sprite.Sprite):
     def __init__(self, initial_position):
         pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.Surface([25, 25])  # Cubert's size. Adjust as needed.
-        self.image.fill((255, 0, 0))  # A deliciously devilish shade of red.
+        # self.image = pygame.Surface([25, 25])  # Cubert's size. Adjust as needed.
+        # self.image.fill((255, 0, 0))  # A deliciously devilish shade of red.
+        self.image = pygame.image.load(os.path.join(".", "arts", "cubert_square_base.png")).convert()
         self.rect = self.image.get_rect()
         self.rect.topleft = initial_position  # This sets the initial position.
         self.is_circle = False
@@ -43,6 +45,12 @@ room_size = 500
 
 def game_main():
     pygame.init()
+    pygame.mixer.init()
+    sound = pygame.mixer.music.load(os.path.join(".", "sounds", "game.ogg"))
+    pygame.mixer.music.play(loops=-1)
+    # sound = pygame.mixer.Sound(os.path.join(".", "sounds", "game.ogg"))
+    # sound.play(loops=5)
+
     screen_size = (800, 600)
     screen = pygame.display.set_mode(screen_size)
     pygame.key.set_repeat(35)
