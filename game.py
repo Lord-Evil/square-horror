@@ -14,7 +14,6 @@ class Cubert(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.topleft = initial_position  # This sets the initial position.
         self.is_circle = False
-        self.turned = True
 
     def update(self, event):
         keys = pygame.key.get_pressed()
@@ -28,18 +27,15 @@ class Cubert(pygame.sprite.Sprite):
                 self.rect.move_ip(0, -5)
             if keys[pygame.K_DOWN]:
                 self.rect.move_ip(0, 5)
-            if keys[pygame.K_SPACE] and self.turned:
-                self.is_circle = not self.is_circle
-                self.turned = False
-                if self.is_circle:
-                    self.image = pygame.image.load(os.path.join(".", "art", "cubert-circle.png")).convert()
-                    pygame.draw.circle(self.image, (255, 0, 0), (13, 13), 13)  # A delightful circle
-                    self.rect = self.image.get_rect(center=self.rect.center)
-                else:
-                    self.image.fill((255, 0, 0))  # Back to a delightful square.
-        if event.type == KEYUP:
             if keys[pygame.K_SPACE]:
-                self.turned = True
+                self.is_circle = True
+                self.image = pygame.image.load(os.path.join(".", "art", "cubert-circle.png")).convert()
+                self.rect = self.image.get_rect(center=self.rect.center)
+        if event.type == KEYUP:
+            if event.key == K_SPACE:
+                self.is_circle = False
+                self.image = pygame.image.load(os.path.join(".", "art", "cubert.png")).convert()
+                self.rect = self.image.get_rect(center=self.rect.center)
 
 white = (255,255,255)
 black = (0,0,0)
