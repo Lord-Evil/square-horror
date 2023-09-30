@@ -17,26 +17,28 @@ class Cubert(pygame.sprite.Sprite):
         self.turned = True
 
     def update(self, event):
+        keys = pygame.key.get_pressed()
+        
         if event.type == KEYDOWN:
-            if event.key == K_UP and self.rect.top > 0:
-                self.rect.move_ip(0, -5)
-            elif event.key == K_DOWN and self.rect.bottom < 600:  # Change 600 to your screen height
-                self.rect.move_ip(0, 5)
-            elif event.key == K_LEFT and self.rect.left > 0:
-                self.rect.move_ip(-5, 0)
-            elif event.key == K_RIGHT and self.rect.right < 800:  # Change 800 to your screen width
+            if keys[pygame.K_RIGHT]:
                 self.rect.move_ip(5, 0)
-            elif event.key == K_SPACE and self.turned:
+            if keys[pygame.K_LEFT]:
+                self.rect.move_ip(-5, 0)
+            if keys[pygame.K_UP]:
+                self.rect.move_ip(0, -5)
+            if keys[pygame.K_DOWN]:
+                self.rect.move_ip(0, 5)
+            if keys[pygame.K_SPACE] and self.turned:
                 self.is_circle = not self.is_circle
                 self.turned = False
                 if self.is_circle:
-                    self.image = pygame.Surface(self.size, pygame.SRCALPHA)  # Cubert's size. Adjust as needed.
+                    self.image = pygame.image.load(os.path.join(".", "art", "cubert-circle.png")).convert()
                     pygame.draw.circle(self.image, (255, 0, 0), (13, 13), 13)  # A delightful circle
                     self.rect = self.image.get_rect(center=self.rect.center)
                 else:
                     self.image.fill((255, 0, 0))  # Back to a delightful square.
         if event.type == KEYUP:
-            if event.key == K_SPACE:
+            if keys[pygame.K_SPACE]:
                 self.turned = True
 
 white = (255,255,255)
@@ -45,7 +47,14 @@ red = (255, 0, 0)
 
 cubert_size = [30, 30]
 
-obstacles = [pygame.Rect(200, 200, 50, 50), pygame.Rect(400, 400, 50, 50)]  # Add more obstacles as needed
+obstacle_img = pygame.image.load(os.path.join(".", "art", "obstacle.png"))
+obstacles = [
+    {"image": obstacle_img, "rect": pygame.Rect(200, 200, 50, 50)},
+    {"image": obstacle_img, "rect": pygame.Rect(400, 400, 50, 50)},
+]
+floor_img = pygame.image.load(os.path.join(".", "art", "floor.png"))
+wall_img = pygame.image.load(os.path.join(".", "art", "wall.png"))
+
 room_size = 500
 
 def game_main():
@@ -65,8 +74,15 @@ def game_main():
     running = True
     while running:
         screen.fill(("#878787"))
-        pygame.draw.rect(screen, ("#ffffff"), ((800-room_size)/2, (600-room_size)/2, room_size, room_size), 3, 7)
-        pygame.draw.rect(screen, ("#000000"), ((800-room_size)/2+3, (600-room_size)/2+3, room_size-6, room_size-6), 0, 5)
+        # Draw walls
+        for x in range(0, screen_size[0]+1, 50):
+            for y in range(0, screen_size[1]+1, 50):
+                screen.blit(wall_img, pygame.Rect(x, y, 50, 50))
+        # Draw floor
+        for x in range(int((800-room_size)/2), int((800-room_size)/2)+room_size, 50):
+            for y in range(int((600-room_size)/2), int((600-room_size)/2)+room_size, 50):
+                screen.blit(floor_img, pygame.Rect(x, y, 50, 50))
+        pygame.draw.rect(screen, ("#ffffff"), ((800-room_size)/2, (600-room_size)/2, room_size, room_size), 3)
 
         for event in pygame.event.get():
             if event.type == QUIT:
@@ -79,13 +95,13 @@ def game_main():
             previous_position = cubert.rect.topleft
             cubert.update(event)  # Update Cubert.
             for obstacle in obstacles:
-                if cubert.rect.colliderect(obstacle):
+                if cubert.rect.colliderect(obstacle["rect"]):
                     cubert.rect.topleft = previous_position  # If Cubert hits an obstacle, move him back.
 
         screen.blit(cubert.image, cubert.rect)  # Draw Cubert to the screen.
 
         for obstacle in obstacles:
-            pygame.draw.rect(screen, (0, 255, 0), obstacle)  # Draws each obstacle a delightful shade of green.
+            screen.blit(obstacle["image"], obstacle["rect"].topleft)
 
         pygame.display.update()
 
