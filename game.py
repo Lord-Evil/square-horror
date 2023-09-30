@@ -3,10 +3,13 @@ import os
 from pygame.locals import *
 
 class Cubert(pygame.sprite.Sprite):
-    def __init__(self, initial_position):
+    def __init__(self, initial_position, cubert_size):
         pygame.sprite.Sprite.__init__(self)
         # self.image = pygame.Surface([25, 25])  # Cubert's size. Adjust as needed.
         # self.image.fill((255, 0, 0))  # A deliciously devilish shade of red.
+        self.health = 3
+        self.size = cubert_size
+
         self.image = pygame.image.load(os.path.join(".", "arts", "cubert_square_base.png")).convert()
         self.rect = self.image.get_rect()
         self.rect.topleft = initial_position  # This sets the initial position.
@@ -27,11 +30,12 @@ class Cubert(pygame.sprite.Sprite):
                 self.is_circle = not self.is_circle
                 self.turned = False
                 if self.is_circle:
-                    self.image = pygame.Surface([25, 25], pygame.SRCALPHA)  # Cubert's size. Adjust as needed.
+                    self.image = pygame.Surface(self.size, pygame.SRCALPHA)  # Cubert's size. Adjust as needed.
                     pygame.draw.circle(self.image, (255, 0, 0), (13, 13), 13)  # A delightful circle
                     self.rect = self.image.get_rect(center=self.rect.center)
                 else:
                     self.image.fill((255, 0, 0))  # Back to a delightful square.
+            print(f"{self.rect.x=}, {self.rect.y=}")
         if event.type == KEYUP:
             if event.key == K_SPACE:
                 self.turned = True
@@ -39,6 +43,8 @@ class Cubert(pygame.sprite.Sprite):
 white = (255,255,255)
 black = (0,0,0)
 red = (255, 0, 0)
+
+cubert_size = [30, 30]
 
 obstacles = [pygame.Rect(200, 200, 50, 50), pygame.Rect(400, 400, 50, 50)]  # Add more obstacles as needed
 room_size = 500
@@ -55,7 +61,7 @@ def game_main():
     screen = pygame.display.set_mode(screen_size)
     pygame.key.set_repeat(35)
 
-    cubert = Cubert([100, 100])  # Initialize Cubert.
+    cubert = Cubert([screen_size[0]/2-(cubert_size[0]/2), screen_size[1]/2-(cubert_size[1]/2)+screen_size[1]/3], cubert_size=cubert_size)  # Initialize Cubert.
 
     running = True
     while running:
