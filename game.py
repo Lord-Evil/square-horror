@@ -10,7 +10,7 @@ class Cubert(pygame.sprite.Sprite):
         self.health = 3
         self.size = cubert_size
 
-        self.image = pygame.image.load(os.path.join(".", "arts", "cubert_square_base.png")).convert()
+        self.image = pygame.image.load(os.path.join(".", "art", "cubert.png")).convert()
         self.rect = self.image.get_rect()
         self.rect.topleft = initial_position  # This sets the initial position.
         self.is_circle = False
@@ -35,7 +35,6 @@ class Cubert(pygame.sprite.Sprite):
                     self.rect = self.image.get_rect(center=self.rect.center)
                 else:
                     self.image.fill((255, 0, 0))  # Back to a delightful square.
-            print(f"{self.rect.x=}, {self.rect.y=}")
         if event.type == KEYUP:
             if event.key == K_SPACE:
                 self.turned = True
