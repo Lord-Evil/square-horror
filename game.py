@@ -14,8 +14,8 @@ wall_img = pygame.image.load(os.path.join(".", "art", "wall.png"))
 bonusJ_img = pygame.image.load(os.path.join(".", "art", "jump_bonus.png"))
 bonusS_img = pygame.image.load(os.path.join(".", "art", "speed_bonus.png"))
 
-death_snd = pygame.mixer.Sound(os.path.join(".", "sounds", "death.wav"))
-coin_snd = pygame.mixer.Sound(os.path.join(".", "sounds", "coin.wav"))
+death_snd = pygame.mixer.Sound(os.path.join(".", "sounds", "death.ogg"))
+coin_snd = pygame.mixer.Sound(os.path.join(".", "sounds", "coin.ogg"))
 
 cell_size = 50
 
@@ -169,6 +169,7 @@ class Cubert(pygame.sprite.Sprite):
         unscaled_cubert = pygame.image.load(os.path.join(".", "art", "cubert.png")).convert()
         unscaled_cubertCircle = pygame.image.load(os.path.join(".", "art", "cubert-speed-circle.png")).convert()
         unscaled_cubertYellowCircle = pygame.image.load(os.path.join(".", "art", "cubert-jump-circle.png")).convert()
+        unscaled_cubertYellowCircle.set_alpha(128)
 
         self.skins = {
             "cubert": pygame.transform.scale(unscaled_cubert, (cell_size, cell_size)),
@@ -182,7 +183,7 @@ class Cubert(pygame.sprite.Sprite):
 
     def move_to(self, dir):
         currentTick = pygame.time.get_ticks()
-        if not self.speedBonusStart>0 and currentTick - 300 < self.lastTick:
+        if not self.speedBonusStart>0 and currentTick - 200 < self.lastTick:
             return
         else:
             self.lastTick = currentTick
@@ -297,7 +298,7 @@ def game_main(music=True):
     icon = pygame.image.load('art/cubert-speed-circle.png')
     pygame.display.set_icon(icon)
     
-    sound = pygame.mixer.music.load(os.path.join(".", "sounds", "game.wav"))
+    sound = pygame.mixer.music.load(os.path.join(".", "sounds", "background.ogg"))
     #sound = pygame.mixer.Sound(os.path.join(".", "sounds", "game.ogg"))
     if music:
         pygame.mixer.music.play(-1)
