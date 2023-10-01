@@ -3,6 +3,78 @@ import pygame
 import os
 from pygame.locals import *
 
+obstacle_img = pygame.image.load(os.path.join(".", "art", "obstacle.png"))
+floor_img = pygame.image.load(os.path.join(".", "art", "floor.png"))
+wall_img = pygame.image.load(os.path.join(".", "art", "wall.png"))
+
+cell_size = 50
+room_rib = 10
+room_size = cell_size * room_rib
+
+boardXOffset = 150
+boardYOffset = 50
+
+screen_size = (800, 600)
+
+class Level():
+    cubert = None
+    cells = None
+    def __init__(self, screen, level="01"):
+        self.screen = screen
+        self.obstacles = []
+        self.loadMap(level)
+
+    def loadMap(self, mapName):
+        with open(f'level{mapName}.map', 'r') as f:
+            room_ribVal = f.read(3)
+            room_rib = int(f'0x{room_ribVal}', 0)
+            print(f"Setting up level size {room_rib}x{room_rib}")
+            self.cells = []
+            y = 0
+            for i in range(room_rib):
+                self.cells.append([])
+                x = 0
+                for j in range(room_rib):
+                    cellVal = str(f.read(1))
+                    if cellVal == "C":
+                        self.cubert = Cubert(self, x, y)  # Initialize Cubert.
+                    elif cellVal == "X":
+                        self.putObstacle("obstacle", x, y)
+                    x += 1
+                    self.cells[i].append(cellVal)
+                y += 1
+                f.read(1) # \n
+
+    def getCubert(self):
+        return self.cubert
+
+    def getCoords(self, x, y):
+        return (boardXOffset + x * cell_size, boardYOffset + y * cell_size)
+
+    def putObstacle(self, type, x, y):
+        rect = pygame.Rect(*self.getCoords(x, y), cell_size, cell_size)
+        self.obstacles.append({"image": obstacle_img, "rect": rect})
+
+    def draw(self):
+        # Draw walls
+        for x in range(0, screen_size[0] + 1, cell_size):
+            for y in range(0, screen_size[1] + 1, cell_size):
+                self.screen.blit(wall_img, pygame.Rect(x, y, cell_size, cell_size))
+        # Draw floor
+        for x in range(int((800 - room_size)/2), int((800 - room_size)/2) + room_size, cell_size):
+            for y in range(int((600 - room_size)/2), int((600 - room_size)/2) + room_size, cell_size):
+                self.screen.blit(floor_img, pygame.Rect(x, y, cell_size, cell_size))
+        pygame.draw.rect(self.screen, ("#ffffff"), ((800 - room_size)/2, (600 - room_size)/2, room_size, room_size), 3)
+
+        for obstacle in self.obstacles:
+            self.screen.blit(obstacle["image"], obstacle["rect"].topleft)
+
+    def canMove(self, x, y):
+        if (x == len(self.cells) or x<0 or self.cells[y][x] == 'X'):
+            return False
+        if (y == len(self.cells[y-1]) or y<0 or self.cells[y][x] == 'X'):
+            return False
+        return True
 class Cubert(pygame.sprite.Sprite):
     rect = None
     skins = None
@@ -22,32 +94,23 @@ class Cubert(pygame.sprite.Sprite):
 
         self.beCubert()
         initial_position = self.level.getCoords(startX, startY)
-        print(initial_position)
         self.rect.topleft = initial_position  # This sets the initial position.
-
-    def check_cell(self, x, y):
-        print(x, y)
-        if (x == len(cells) or x<0):
-            return False
-        if (y == len(cells[y-1]) or y<0):
-            return False
-        return True
 
     def move_to(self, dir):
         if dir=="right":
-            if(self.check_cell(self.xPos + 1, self.yPos)):
+            if(self.level.canMove(self.xPos + 1, self.yPos)):
                 self.xPos += 1
                 self.rect.move_ip(cell_size, 0)
         if dir=="left":
-            if(self.check_cell(self.xPos - 1, self.yPos)):
+            if(self.level.canMove(self.xPos - 1, self.yPos)):
                 self.xPos -= 1
                 self.rect.move_ip(-cell_size, 0)
         if dir=="up":
-            if(self.check_cell(self.xPos, self.yPos - 1)):
+            if(self.level.canMove(self.xPos, self.yPos - 1)):
                 self.yPos -= 1
                 self.rect.move_ip(0, -cell_size)
         if dir=="down":
-            if(self.check_cell(self.xPos, self.yPos + 1)):
+            if(self.level.canMove(self.xPos, self.yPos + 1)):
                 self.yPos += 1
                 self.rect.move_ip(0, cell_size)
 
@@ -82,53 +145,6 @@ class Cubert(pygame.sprite.Sprite):
             if event.key == K_SPACE:
                 self.beCubert()
 
-obstacle_img = pygame.image.load(os.path.join(".", "art", "obstacle.png"))
-floor_img = pygame.image.load(os.path.join(".", "art", "floor.png"))
-wall_img = pygame.image.load(os.path.join(".", "art", "wall.png"))
-
-cell_size = 50
-room_rib = 10
-room_size = cell_size * room_rib
-
-boardXOffset = 150
-boardYOffset = 50
-
-cells = []
-
-for i in range(room_rib):
-    cells.append([])
-    for j in range(room_rib):
-        cells[i].append("none")
-
-screen_size = (800, 600)
-print(cells)
-class Level():
-    def __init__(self, screen, level=0):
-        self.screen = screen
-        self.obstacles = []
-        self.putObstacle("obstacle", 1, 0)
-        self.putObstacle("obstacle", 1, 1)
-
-    def getCoords(self, x, y):
-        return (boardXOffset + x * cell_size, boardYOffset + y * cell_size)
-
-    def putObstacle(self, type, x, y):
-        rect = pygame.Rect(*self.getCoords(x, y), cell_size, cell_size)
-        self.obstacles.append({"image": obstacle_img, "rect": rect})
-
-    def draw(self):
-        # Draw walls
-        for x in range(0, screen_size[0] + 1, cell_size):
-            for y in range(0, screen_size[1] + 1, cell_size):
-                self.screen.blit(wall_img, pygame.Rect(x, y, cell_size, cell_size))
-        # Draw floor
-        for x in range(int((800 - room_size)/2), int((800 - room_size)/2) + room_size, cell_size):
-            for y in range(int((600 - room_size)/2), int((600 - room_size)/2) + room_size, cell_size):
-                self.screen.blit(floor_img, pygame.Rect(x, y, cell_size, cell_size))
-        pygame.draw.rect(self.screen, ("#ffffff"), ((800 - room_size)/2, (600 - room_size)/2, room_size, room_size), 3)
-
-        for obstacle in self.obstacles:
-            self.screen.blit(obstacle["image"], obstacle["rect"].topleft)
 
 def game_main(music=True):
     pygame.init()
@@ -140,10 +156,13 @@ def game_main(music=True):
     # sound.play(loops=5)
 
     screen = pygame.display.set_mode(screen_size)
-    pygame.key.set_repeat(100)
+    pygame.key.set_repeat(200)
 
-    level = Level(screen, 0)
-    cubert = Cubert(level, 0, 0)  # Initialize Cubert.
+    level = Level(screen, "01")
+    cubert = level.getCubert()
+    if not cubert:
+        print("Cubert is missing!")
+        return
 
     running = True
 
@@ -160,9 +179,6 @@ def game_main(music=True):
 
             previous_position = cubert.rect.topleft
             cubert.update(event)  # Update Cubert.
-            for obstacle in level.obstacles:
-                if cubert.rect.colliderect(obstacle["rect"]):
-                    cubert.rect.topleft = previous_position  # If Cubert hits an obstacle, move him back.
 
         screen.blit(cubert.image, cubert.rect)  # Draw Cubert to the screen.
 
