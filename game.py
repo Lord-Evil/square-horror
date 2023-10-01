@@ -307,7 +307,7 @@ def game_main(music=True):
 
     level = Level(screen, "01")
     cubert = level.getCubert()
-    timer = Timer(screen, 10)
+    timer = Timer(screen, 30)
     timer.start()
     if not cubert:
         print("Cubert is missing!")
