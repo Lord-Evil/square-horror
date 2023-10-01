@@ -77,6 +77,7 @@ class Level():
         yCord += 10
         rect = pygame.Rect(xCord, yCord, cell_size-20, cell_size-20)
         self.screen.blit(coin_img, rect.topleft)
+
     def putBonus(self, bonusType, x, y):
         if bonusType == "J":
             rect = pygame.Rect(*self.getCoords(x, y), cell_size, cell_size)
@@ -114,6 +115,14 @@ class Level():
     def eatCoin(self, x, y):
         self.cells[y][x] = 'O'
 
+    def isBonus(self, x, y):
+        return self.cells[y][x] in ["S", "J"]
+
+    def eatBonus(self, x, y):
+        bonus = self.cells[y][x]
+        self.cells[y][x] = 'O'
+        return bonus
+
 class Cubert(pygame.sprite.Sprite):
     rect = None
     skins = None
@@ -124,6 +133,12 @@ class Cubert(pygame.sprite.Sprite):
         self.xPos = startX
         self.yPos = startY
         self.level = level
+        
+        self.speedBonus = 0
+        self.speedBonusStart = 0
+        self.jumpBonus = 0
+        self.jumpBonusStart = 0
+
         self.lastTick = pygame.time.get_ticks()
         unscaled_cubert = pygame.image.load(os.path.join(".", "art", "cubert.png")).convert()
         unscaled_cubertCircle = pygame.image.load(os.path.join(".", "art", "cubert-circle.png")).convert()
@@ -161,11 +176,16 @@ class Cubert(pygame.sprite.Sprite):
                 self.rect.move_ip(0, cell_size)
         if self.level.isCoin(self.xPos, self.yPos):
             self.level.eatCoin(self.xPos, self.yPos)
+        if self.level.isBonus(self.xPos, self.yPos):
+            bonus = self.level.eatBonus(self.xPos, self.yPos)
+            if bonus == "S": self.beCircle()
 
     def beCircle(self):
         self.is_circle = True
         self.image = self.skins["circle"]
         self.rect = self.image.get_rect(center=self.rect.center)
+        self.speedBonus = 10
+        self.speedBonusStart = int(pygame.time.get_ticks()/1000)
 
     def beCubert(self):
         self.is_circle = False
@@ -176,7 +196,7 @@ class Cubert(pygame.sprite.Sprite):
             self.rect = self.image.get_rect(center=self.rect.center)
 
     def update(self, event):
-        keys = pygame.key.get_pressed()
+        #keys = pygame.key.get_pressed()
         
         if event.type == KEYDOWN:
             if event.key ==K_RIGHT:
@@ -187,12 +207,20 @@ class Cubert(pygame.sprite.Sprite):
                 self.move_to("up")
             if event.key ==K_DOWN:
                 self.move_to("down")
-            if keys[pygame.K_SPACE]:
-                self.beCircle()
-        if event.type == KEYUP:
-            if event.key == K_SPACE:
+            # if keys[pygame.K_SPACE]:
+            #     self.beCircle()
+        # if event.type == KEYUP:
+        #     if event.key == K_SPACE:
+        #         self.beCubert()
+    def draw(self):
+        if(self.speedBonus > 0 and self.speedBonusStart > 0):
+            currentTick = int(pygame.time.get_ticks()/1000)
+            if currentTick - self.speedBonus >= self.speedBonusStart:
                 self.beCubert()
+                self.speedBonus = 0
+                self.speedBonusStart = 0
 
+        self.level.screen.blit(self.image, self.rect)  # Draw Cubert to the screen.
 class Timer():
     def __init__(self, screen, seconds=0):
         self.screen = screen
@@ -256,10 +284,10 @@ def game_main(music=True):
             elif event.type == KEYDOWN and event.key == K_ESCAPE:
                 running = False
                 break
-            previous_position = cubert.rect.topleft
-            cubert.update(event)  # Update Cubert.
+            if(timer.running):
+                cubert.update(event)  # Update Cubert.
 
-        screen.blit(cubert.image, cubert.rect)  # Draw Cubert to the screen.
+        cubert.draw()
 
         pygame.display.update()
 
