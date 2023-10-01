@@ -2,13 +2,23 @@
 import pygame
 import os
 from pygame.locals import *
+from cutils import set_cells_to_value
 
 pygame.init()
 pygame.mixer.init()
+pygame.font.init()
+
+MARKER_BLOCK = "B"
+MARKER_OBSCALETE = "X"
+MARKER_COIN = "M"
+MARKER_EMPTY = "O"
+
+MARKER_BONUS_JUMP = "J"
+MARKER_BONUS_SPEED = "S"
 
 obstacle_img = pygame.image.load(os.path.join(".", "art", "obstacle.png"))
 coin_img = pygame.image.load(os.path.join(".", "art", "coin.png"))
-#coin_img = pygame.transform.scale(coin_img, (30, 30))
+wail_img = pygame.image.load(os.path.join(".", "art", "wall.png"))
 floor_img = pygame.image.load(os.path.join(".", "art", "floor.png"))
 wall_img = pygame.image.load(os.path.join(".", "art", "wall.png"))
 bonusJ_img = pygame.image.load(os.path.join(".", "art", "jump_bonus.png"))
@@ -66,7 +76,7 @@ class Level():
                     if cellVal == "C":
                         self.cubert = Cubert(self, x, y)  # Initialize Cubert.
                     elif cellVal == "O":
-                        cellVal = "M"
+                        cellVal = MARKER_COIN
                     x += 1
                     self.cells[i].append(cellVal)
                 y += 1
@@ -83,12 +93,14 @@ class Level():
         for row in self.cells:
             x = 0
             for cell in row:
-                if cell == "X":
+                if cell == MARKER_OBSCALETE:
                   self.putObstacle("obstacle", x, y)
-                elif cell == "M":
+                elif cell == MARKER_COIN:
                     self.putCoin(x, y)
-                elif cell in ["J", "S"]:
+                elif cell in [MARKER_BONUS_JUMP, MARKER_BONUS_SPEED]:
                     self.putBonus(cell, x, y)
+                elif cell == MARKER_BLOCK:
+                    self.putBlock(x, y)
                 x+=1
             y+=1
 
@@ -101,13 +113,17 @@ class Level():
         self.screen.blit(coin_img, rect.topleft)
 
     def putBonus(self, bonusType, x, y):
-        if bonusType == "J":
+        if bonusType == MARKER_BONUS_JUMP:
             rect = pygame.Rect(*self.getCoords(x, y), cell_size, cell_size)
             self.screen.blit(bonusJ_img, rect.topleft)
-        elif bonusType == "S":
+        elif bonusType == MARKER_BONUS_SPEED:
             rect = pygame.Rect(*self.getCoords(x, y), cell_size, cell_size)
             self.screen.blit(bonusS_img, rect.topleft)
             pass
+    
+    def putBlock(self, x, y):
+        rect = pygame.Rect(*self.getCoords(x, y), cell_size, cell_size)
+        self.screen.blit(wall_img, rect.topleft)
 
     def draw(self):
         # Draw walls
@@ -129,31 +145,40 @@ class Level():
             or y >= len(self.cells[1])
             or y < 0
             ): return False
-        if(self.cells[y][x] == 'X'):
-                if(self.cells[y][x] == 'X' and self.cubert.jumpBonusStart > 0):
+        if(self.cells[y][x] == MARKER_OBSCALETE):
+                if(self.cubert.jumpBonusStart > 0):
                     return True
                 return False
+        if(self.cells[y][x] == MARKER_BLOCK):
+            return False
         return True
 
     def isCoin(self, x, y):
-        return self.cells[y][x] == 'M'
+        return self.cells[y][x] == MARKER_COIN
 
     def eatCoin(self, x, y):
-        self.cells[y][x] = 'O'
+        self.cells[y][x] = MARKER_EMPTY
         self.coinCounter.addOne()
         coin_snd.play()
 
     def isBonus(self, x, y):
-        return self.cells[y][x] in ["S", "J"]
+        return self.cells[y][x] in [MARKER_BONUS_SPEED, MARKER_BONUS_JUMP]
 
     def eatBonus(self, x, y):
         bonus = self.cells[y][x]
-        self.cells[y][x] = 'O'
+        self.cells[y][x] = MARKER_EMPTY
         return bonus
+    
+    def block_fields(self, lvl):
+        block_marker = MARKER_BLOCK
+        new_matrix = set_cells_to_value(self.cells, lvl=lvl, value=block_marker)
+        self.cells = new_matrix
+
 
 class Cubert(pygame.sprite.Sprite):
     rect = None
     skins = None
+
     def __init__(self, level, startX, startY):
         pygame.sprite.Sprite.__init__(self)
         self.health = 3
@@ -206,15 +231,16 @@ class Cubert(pygame.sprite.Sprite):
             self.level.eatCoin(self.xPos, self.yPos)
         if (self.level.isBonus(self.xPos, self.yPos) and not self.is_circle):
             bonus = self.level.eatBonus(self.xPos, self.yPos)
-            if bonus == "S": self.beCircle("S")
-            if bonus == "J": self.beCircle("J")
+            if bonus == MARKER_BONUS_SPEED: self.beCircle(MARKER_BONUS_SPEED)
+            if bonus == MARKER_BONUS_JUMP: self.beCircle(MARKER_BONUS_JUMP)
+
 
     def beCircle(self, circleType="S"):
         self.is_circle = True
-        if circleType == "S":
+        if circleType == MARKER_BONUS_SPEED:
             self.image = self.skins["speed-circle"]
             self.speedBonusStart = int(pygame.time.get_ticks()/1000)
-        elif circleType == "J":
+        elif circleType == MARKER_BONUS_JUMP:
             self.image = self.skins["jump-circle"]
             self.jumpBonusStart = int(pygame.time.get_ticks()/1000)
 
@@ -268,6 +294,7 @@ class Timer():
         self.textRect.center = (75, 25)
 
         self.seconds = seconds
+        self.left_time = self.seconds
 
     def start(self):
         self.running = True
@@ -284,13 +311,47 @@ class Timer():
     def draw(self):
         timePast = int((pygame.time.get_ticks() - self.startTime)/1000)
         if self.seconds-timePast <= 0:
+            self.left_time = 0
             self.stop()
             message = "Game Over"
         else:
+            self.left_time = self.seconds-timePast
             minutes, seconds = divmod(self.seconds-timePast, 60)
             message = "%02d:%02d" % (minutes, seconds)
         self.text = self.font.render(message, True, "#222034", "#cbdbfc")
         self.screen.blit(self.text, self.textRect)
+
+class Menu:
+    def __init__(self, screen: pygame.Surface) -> None:
+        self.screen = screen
+        self.font = pygame.font.Font('kongtext.ttf', 24)
+        self.text = self.font.render('00:00', True, "#222034", "#cbdbfc")
+        self.textRect = self.text.get_rect()
+        self.wait = False
+
+    def main_menu(self):
+        ...
+    
+    def end_game_menu(self):
+        self.wait = True
+        self.message = "press < Enter > for retry game"
+
+        self.text = self.font.render(self.message, True, "#222034", "#cbdbfc")
+        self.textRect = self.text.get_rect()
+        self.textRect.center = (400, 300)
+    
+    def pause_menu():
+        ...
+    
+    def scores_table():
+        ...
+
+    def get_status():
+        ...
+
+    def draw(self):
+        self.screen.blit(self.text, self.textRect)
+
 
 def game_main(music=True):
     pygame.display.set_caption('Horror Cube')
@@ -305,9 +366,13 @@ def game_main(music=True):
     screen = pygame.display.set_mode(screen_size)
     pygame.key.set_repeat(200)
 
+    menu = Menu(screen)
     level = Level(screen, "01")
     cubert = level.getCubert()
-    timer = Timer(screen, 30)
+
+    start_seconds = 30
+    timer = Timer(screen, start_seconds)
+
     timer.start()
     if not cubert:
         print("Cubert is missing!")
@@ -315,21 +380,40 @@ def game_main(music=True):
 
     running = True
 
+    seconds_for_block = 10
+    block_lvl=0
+    last_block_time = 0
+
     while running:
+        if (timer.left_time != start_seconds) and (timer.left_time != last_block_time) and (timer.left_time % seconds_for_block == 0):
+            last_block_time = timer.left_time
+            level.block_fields(lvl=block_lvl)
+            block_lvl+=1
+
         level.draw()
         timer.draw()
+
+        if menu.wait:
+            menu.draw()
+
         for event in pygame.event.get():
-            if event.type == QUIT:
-                running = False
-                break
-            elif event.type == KEYDOWN and event.key == K_ESCAPE:
-                running = False
-                break
-            if(timer.running):
-                cubert.update(event)  # Update Cubert.
+                if event.type == QUIT:
+                    running = False
+                    break
+                elif event.type == KEYDOWN and event.key == K_ESCAPE:
+                    running = False
+                    break
+                elif(timer.running):
+                    cubert.update(event)  # Update Cubert.
+                    cubert.draw()
+                elif(menu.wait and event.type == KEYDOWN and event.key == K_RETURN):
+                    game_main(True)
+
+
+        if(not timer.running and not menu.wait):
+            menu.end_game_menu()
 
         cubert.draw()
-
         pygame.display.update()
 
     pygame.quit()
