@@ -297,7 +297,7 @@ def game_main(music=True):
     icon = pygame.image.load('art/cubert-speed-circle.png')
     pygame.display.set_icon(icon)
     
-    sound = pygame.mixer.music.load(os.path.join(".", "sounds", "game.ogg"))
+    sound = pygame.mixer.music.load(os.path.join(".", "sounds", "game.wav"))
     #sound = pygame.mixer.Sound(os.path.join(".", "sounds", "game.ogg"))
     if music:
         pygame.mixer.music.play(-1)
