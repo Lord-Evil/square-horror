@@ -393,9 +393,6 @@ def game_main(music=True):
         level.draw()
         timer.draw()
 
-        if menu.wait:
-            menu.draw()
-
         for event in pygame.event.get():
                 if event.type == QUIT:
                     running = False
@@ -414,6 +411,10 @@ def game_main(music=True):
             menu.end_game_menu()
 
         cubert.draw()
+
+        if menu.wait:
+            menu.draw()
+            
         pygame.display.update()
 
     pygame.quit()
