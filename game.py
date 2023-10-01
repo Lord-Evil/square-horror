@@ -88,7 +88,6 @@ class Level():
         self.redraw()
 
     def canMove(self, x, y):
-        print(x, y)
         if (x >= len(self.cells) 
             or x < 0
             or y >= len(self.cells[1])
@@ -182,13 +181,41 @@ class Cubert(pygame.sprite.Sprite):
             if event.key == K_SPACE:
                 self.beCubert()
 
+class Timer():
+    def __init__(self, screen, seconds=0):
+        self.screen = screen
+        self.font = pygame.font.Font('kongtext.ttf', 24)
+        self.text = self.font.render('00:00', True, "#222034", "#cbdbfc")
+        self.textRect = self.text.get_rect()
+        self.textRect.center = (75, 25)
+
+        self.seconds = seconds
+
+    def start(self):
+        self.running = True
+        self.startTime=pygame.time.get_ticks()
+
+    def stop(self):
+        self.running = False
+
+    def draw(self):
+        timePast = int((pygame.time.get_ticks() - self.startTime)/1000)
+        if self.seconds-timePast <= 0:
+            self.stop()
+            message = "Game Over"
+        else:
+            minutes, seconds = divmod(self.seconds-timePast, 60)
+            message = "%02d:%02d" % (minutes, seconds)
+        self.text = self.font.render(message, True, "#222034", "#cbdbfc")
+        self.screen.blit(self.text, self.textRect)
+
 def game_main(music=True):
     pygame.init()
     pygame.mixer.init()
     pygame.display.set_caption('Horror Cube')
     icon = pygame.image.load('art/cubert-circle.png')
     pygame.display.set_icon(icon)
-
+    
     sound = pygame.mixer.music.load(os.path.join(".", "sounds", "game.ogg"))
     if music:
         pygame.mixer.music.play(loops=-1)
@@ -200,6 +227,8 @@ def game_main(music=True):
 
     level = Level(screen, "01")
     cubert = level.getCubert()
+    timer = Timer(screen, 30)
+    timer.start()
     if not cubert:
         print("Cubert is missing!")
         return
@@ -208,7 +237,7 @@ def game_main(music=True):
 
     while running:
         level.draw()
-
+        timer.draw()
         for event in pygame.event.get():
             if event.type == QUIT:
                 running = False
