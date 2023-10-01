@@ -106,7 +106,9 @@ class Level():
             or y >= len(self.cells[1])
             or y < 0
             or self.cells[y][x] == 'X'):
-            return False
+                if(self.cells[y][x] == 'X' and self.cubert.jumpBonusStart > 0):
+                    return True
+                return False
         return True
 
     def isCoin(self, x, y):
@@ -134,18 +136,18 @@ class Cubert(pygame.sprite.Sprite):
         self.yPos = startY
         self.level = level
         
-        self.speedBonus = 0
         self.speedBonusStart = 0
-        self.jumpBonus = 0
         self.jumpBonusStart = 0
 
         self.lastTick = pygame.time.get_ticks()
         unscaled_cubert = pygame.image.load(os.path.join(".", "art", "cubert.png")).convert()
         unscaled_cubertCircle = pygame.image.load(os.path.join(".", "art", "cubert-circle.png")).convert()
+        unscaled_cubertYellowCircle = pygame.image.load(os.path.join(".", "art", "cubert-yellow-circle.png")).convert()
 
         self.skins = {
             "cubert": pygame.transform.scale(unscaled_cubert, (cell_size, cell_size)),
-            "circle": pygame.transform.scale(unscaled_cubertCircle, (cell_size, cell_size)),
+            "speed-circle": pygame.transform.scale(unscaled_cubertCircle, (cell_size, cell_size)),
+            "jump-circle": pygame.transform.scale(unscaled_cubertYellowCircle, (cell_size, cell_size)),
         }
 
         self.beCubert()
@@ -154,7 +156,7 @@ class Cubert(pygame.sprite.Sprite):
 
     def move_to(self, dir):
         currentTick = pygame.time.get_ticks()
-        if not self.is_circle and currentTick - 300 < self.lastTick:
+        if not self.speedBonusStart>0 and currentTick - 300 < self.lastTick:
             return
         else:
             self.lastTick = currentTick
@@ -176,16 +178,21 @@ class Cubert(pygame.sprite.Sprite):
                 self.rect.move_ip(0, cell_size)
         if self.level.isCoin(self.xPos, self.yPos):
             self.level.eatCoin(self.xPos, self.yPos)
-        if self.level.isBonus(self.xPos, self.yPos):
+        if (self.level.isBonus(self.xPos, self.yPos) and not self.is_circle):
             bonus = self.level.eatBonus(self.xPos, self.yPos)
-            if bonus == "S": self.beCircle()
+            if bonus == "S": self.beCircle("S")
+            if bonus == "J": self.beCircle("J")
 
-    def beCircle(self):
+    def beCircle(self, circleType="S"):
         self.is_circle = True
-        self.image = self.skins["circle"]
+        if circleType == "S":
+            self.image = self.skins["speed-circle"]
+            self.speedBonusStart = int(pygame.time.get_ticks()/1000)
+        elif circleType == "J":
+            self.image = self.skins["jump-circle"]
+            self.jumpBonusStart = int(pygame.time.get_ticks()/1000)
+
         self.rect = self.image.get_rect(center=self.rect.center)
-        self.speedBonus = 10
-        self.speedBonusStart = int(pygame.time.get_ticks()/1000)
 
     def beCubert(self):
         self.is_circle = False
@@ -213,14 +220,19 @@ class Cubert(pygame.sprite.Sprite):
         #     if event.key == K_SPACE:
         #         self.beCubert()
     def draw(self):
-        if(self.speedBonus > 0 and self.speedBonusStart > 0):
+        if(self.speedBonusStart > 0):
             currentTick = int(pygame.time.get_ticks()/1000)
-            if currentTick - self.speedBonus >= self.speedBonusStart:
+            if currentTick - 10 >= self.speedBonusStart:
                 self.beCubert()
-                self.speedBonus = 0
                 self.speedBonusStart = 0
+        elif(self.jumpBonusStart > 0):
+            currentTick = int(pygame.time.get_ticks()/1000)
+            if currentTick - 10 >= self.jumpBonusStart:
+                self.beCubert()
+                self.jumpBonusStart = 0
 
         self.level.screen.blit(self.image, self.rect)  # Draw Cubert to the screen.
+
 class Timer():
     def __init__(self, screen, seconds=0):
         self.screen = screen
