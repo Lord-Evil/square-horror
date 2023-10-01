@@ -18,7 +18,7 @@ MARKER_BONUS_SPEED = "S"
 
 obstacle_img = pygame.image.load(os.path.join(".", "art", "obstacle.png"))
 coin_img = pygame.image.load(os.path.join(".", "art", "coin.png"))
-wail_img = pygame.image.load(os.path.join(".", "art", "wall.png"))
+block_img = pygame.image.load(os.path.join(".", "art", "wall.png"))
 floor_img = pygame.image.load(os.path.join(".", "art", "floor.png"))
 wall_img = pygame.image.load(os.path.join(".", "art", "wall.png"))
 bonusJ_img = pygame.image.load(os.path.join(".", "art", "jump_bonus.png"))
@@ -123,7 +123,7 @@ class Level():
     
     def putBlock(self, x, y):
         rect = pygame.Rect(*self.getCoords(x, y), cell_size, cell_size)
-        self.screen.blit(wall_img, rect.topleft)
+        self.screen.blit(block_img, rect.topleft)
 
     def draw(self):
         # Draw walls
@@ -414,7 +414,7 @@ def game_main(music=True):
 
         if menu.wait:
             menu.draw()
-            
+
         pygame.display.update()
 
     pygame.quit()
