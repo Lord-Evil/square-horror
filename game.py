@@ -12,6 +12,7 @@ MARKER_BLOCK = "B"
 MARKER_OBSCALETE = "X"
 MARKER_COIN = "M"
 MARKER_EMPTY = "O"
+MARKER_CUBERT = "C"
 
 MARKER_BONUS_JUMP = "J"
 MARKER_BONUS_SPEED = "S"
@@ -19,6 +20,8 @@ MARKER_BONUS_SPEED = "S"
 obstacle_img = pygame.image.load(os.path.join(".", "art", "obstacle.png"))
 coin_img = pygame.image.load(os.path.join(".", "art", "coin.png"))
 block_img = pygame.image.load(os.path.join(".", "art", "block.png"))
+block_img.set_alpha(200)
+
 floor_img = pygame.image.load(os.path.join(".", "art", "floor.png"))
 wall_img = pygame.image.load(os.path.join(".", "art", "wall.png"))
 bonusJ_img = pygame.image.load(os.path.join(".", "art", "jump_bonus.png"))
@@ -56,6 +59,7 @@ class Level():
     cubert = None
     cells = None
     def __init__(self, screen, level="01"):
+        self.coins = 0
         self.screen = screen
         self.coinCounter = CoinCounter(screen)
         self.loadMap(level)
@@ -73,14 +77,16 @@ class Level():
                 x = 0
                 for j in range(self.room_rib):
                     cellVal = str(f.read(1))
-                    if cellVal == "C":
+                    if cellVal == MARKER_CUBERT:
                         self.cubert = Cubert(self, x, y)  # Initialize Cubert.
-                    elif cellVal == "O":
+                    elif cellVal == MARKER_EMPTY:
                         cellVal = MARKER_COIN
+                        self.coins += 1
                     x += 1
                     self.cells[i].append(cellVal)
                 y += 1
                 f.read(1) # \n
+        
 
     def getCubert(self):
         return self.cubert
@@ -332,9 +338,17 @@ class Menu:
     def main_menu(self):
         ...
     
-    def end_game_menu(self):
+    def finish_menu(self):
         self.wait = True
-        self.message = "press < Enter > for retry game"
+        self.message = "YOU WON. GOOD JOB"
+
+        self.text = self.font.render(self.message, True, "#222034", "#cbdbfc")
+        self.textRect = self.text.get_rect()
+        self.textRect.center = (400, 300)
+
+    def dead_menu(self):
+        self.wait = True
+        self.message = "TIME LEFT. YOU DEAD"
 
         self.text = self.font.render(self.message, True, "#222034", "#cbdbfc")
         self.textRect = self.text.get_rect()
@@ -403,12 +417,17 @@ def game_main(music=True):
                 elif(timer.running):
                     cubert.update(event)  # Update Cubert.
                     cubert.draw()
-                elif(menu.wait and event.type == KEYDOWN and event.key == K_RETURN):
+                elif(menu.wait and event.type == KEYDOWN and event.key == K_RETURN):  # restart game (for: finish, dead menu)
                     game_main(True)
+
+                if(level.coins == level.coinCounter.counter):  # eat all coin, finish
+                    menu.finish_menu()
+                
 
 
         if(not timer.running and not menu.wait):
-            menu.end_game_menu()
+            menu.dead_menu()
+            timer.stop(win=True)
 
         cubert.draw()
 
