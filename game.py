@@ -4,6 +4,8 @@ import os
 from pygame.locals import *
 
 obstacle_img = pygame.image.load(os.path.join(".", "art", "obstacle.png"))
+coin_img = pygame.image.load(os.path.join(".", "art", "coin.png"))
+coin_img = pygame.transform.scale(coin_img, (30, 30))
 floor_img = pygame.image.load(os.path.join(".", "art", "floor.png"))
 wall_img = pygame.image.load(os.path.join(".", "art", "wall.png"))
 
@@ -19,7 +21,6 @@ class Level():
     cells = None
     def __init__(self, screen, level="01"):
         self.screen = screen
-        self.obstacles = []
         self.loadMap(level)
 
     def loadMap(self, mapName):
@@ -37,8 +38,8 @@ class Level():
                     cellVal = str(f.read(1))
                     if cellVal == "C":
                         self.cubert = Cubert(self, x, y)  # Initialize Cubert.
-                    elif cellVal == "X":
-                        self.putObstacle("obstacle", x, y)
+                    elif cellVal == "O":
+                        cellVal = "M"
                     x += 1
                     self.cells[i].append(cellVal)
                 y += 1
@@ -50,9 +51,28 @@ class Level():
     def getCoords(self, x, y):
         return (boardXOffset + x * cell_size, boardYOffset + y * cell_size)
 
+    def redraw(self):
+        y = 0
+        for row in self.cells:
+            x = 0
+            for cell in row:
+                if cell == "X":
+                  self.putObstacle("obstacle", x, y)
+                elif cell == "M":
+                    self.putCoin(x, y)
+                x+=1
+            y+=1
+
     def putObstacle(self, type, x, y):
         rect = pygame.Rect(*self.getCoords(x, y), cell_size, cell_size)
-        self.obstacles.append({"image": obstacle_img, "rect": rect})
+        self.screen.blit(obstacle_img, rect.topleft)
+
+    def putCoin(self, x, y):
+        (xCord, yCord) = self.getCoords(x, y)
+        xCord += 10
+        yCord += 10
+        rect = pygame.Rect(xCord, yCord, cell_size-20, cell_size-20)
+        self.screen.blit(coin_img, rect.topleft)
 
     def draw(self):
         # Draw walls
@@ -65,8 +85,7 @@ class Level():
                 self.screen.blit(floor_img, pygame.Rect(x, y, cell_size, cell_size))
         pygame.draw.rect(self.screen, ("#ffffff"), ((800 - self.room_size)/2, (600 - self.room_size)/2, self.room_size, self.room_size), 3)
 
-        for obstacle in self.obstacles:
-            self.screen.blit(obstacle["image"], obstacle["rect"].topleft)
+        self.redraw()
 
     def canMove(self, x, y):
         if (x == len(self.cells) or x<0 or self.cells[y][x] == 'X'):
@@ -74,6 +93,13 @@ class Level():
         if (y == len(self.cells[y-1]) or y<0 or self.cells[y][x] == 'X'):
             return False
         return True
+
+    def isCoin(self, x, y):
+        return self.cells[y][x] == 'M'
+
+    def eatCoin(self, x, y):
+        self.cells[y][x] = 'O'
+
 class Cubert(pygame.sprite.Sprite):
     rect = None
     skins = None
@@ -84,11 +110,12 @@ class Cubert(pygame.sprite.Sprite):
         self.xPos = startX
         self.yPos = startY
         self.level = level
-        #unscaled_image = pygame.image.load(os.path.join(".", "art", "cubert.png")).convert()
-        #self.image = pygame.transform.scale(unscaled_image, self.size)
+        unscaled_cubert = pygame.image.load(os.path.join(".", "art", "cubert.png")).convert()
+        unscaled_cubertCircle = pygame.image.load(os.path.join(".", "art", "cubert-circle.png")).convert()
+
         self.skins = {
-            "cubert": pygame.image.load(os.path.join(".", "art", "cubert.png")).convert(),
-            "circle": pygame.image.load(os.path.join(".", "art", "cubert-circle.png")).convert(),
+            "cubert": pygame.transform.scale(unscaled_cubert, (cell_size, cell_size)),
+            "circle": pygame.transform.scale(unscaled_cubertCircle, (cell_size, cell_size)),
         }
 
         self.beCubert()
@@ -112,6 +139,8 @@ class Cubert(pygame.sprite.Sprite):
             if(self.level.canMove(self.xPos, self.yPos + 1)):
                 self.yPos += 1
                 self.rect.move_ip(0, cell_size)
+        if self.level.isCoin(self.xPos, self.yPos):
+            self.level.eatCoin(self.xPos, self.yPos)
 
     def beCircle(self):
         self.is_circle = True
