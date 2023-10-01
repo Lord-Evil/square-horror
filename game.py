@@ -105,7 +105,8 @@ class Level():
             or x < 0
             or y >= len(self.cells[1])
             or y < 0
-            or self.cells[y][x] == 'X'):
+            ): return False
+        if(self.cells[y][x] == 'X'):
                 if(self.cells[y][x] == 'X' and self.cubert.jumpBonusStart > 0):
                     return True
                 return False
@@ -141,8 +142,8 @@ class Cubert(pygame.sprite.Sprite):
 
         self.lastTick = pygame.time.get_ticks()
         unscaled_cubert = pygame.image.load(os.path.join(".", "art", "cubert.png")).convert()
-        unscaled_cubertCircle = pygame.image.load(os.path.join(".", "art", "cubert-circle.png")).convert()
-        unscaled_cubertYellowCircle = pygame.image.load(os.path.join(".", "art", "cubert-yellow-circle.png")).convert()
+        unscaled_cubertCircle = pygame.image.load(os.path.join(".", "art", "cubert-speed-circle.png")).convert()
+        unscaled_cubertYellowCircle = pygame.image.load(os.path.join(".", "art", "cubert-jump-circle.png")).convert()
 
         self.skins = {
             "cubert": pygame.transform.scale(unscaled_cubert, (cell_size, cell_size)),
@@ -265,7 +266,7 @@ def game_main(music=True):
     pygame.init()
     pygame.mixer.init()
     pygame.display.set_caption('Horror Cube')
-    icon = pygame.image.load('art/cubert-circle.png')
+    icon = pygame.image.load('art/cubert-speed-circle.png')
     pygame.display.set_icon(icon)
     
     sound = pygame.mixer.music.load(os.path.join(".", "sounds", "game.ogg"))
