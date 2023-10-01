@@ -88,9 +88,12 @@ class Level():
         self.redraw()
 
     def canMove(self, x, y):
-        if (x == len(self.cells) or x<0 or self.cells[y][x] == 'X'):
-            return False
-        if (y == len(self.cells[y-1]) or y<0 or self.cells[y][x] == 'X'):
+        print(x, y)
+        if (x >= len(self.cells) 
+            or x < 0
+            or y >= len(self.cells[1])
+            or y < 0
+            or self.cells[y][x] == 'X'):
             return False
         return True
 
@@ -110,6 +113,7 @@ class Cubert(pygame.sprite.Sprite):
         self.xPos = startX
         self.yPos = startY
         self.level = level
+        self.lastTick = pygame.time.get_ticks()
         unscaled_cubert = pygame.image.load(os.path.join(".", "art", "cubert.png")).convert()
         unscaled_cubertCircle = pygame.image.load(os.path.join(".", "art", "cubert-circle.png")).convert()
 
@@ -123,6 +127,11 @@ class Cubert(pygame.sprite.Sprite):
         self.rect.topleft = initial_position  # This sets the initial position.
 
     def move_to(self, dir):
+        currentTick = pygame.time.get_ticks()
+        if not self.is_circle and currentTick - 300 < self.lastTick:
+            return
+        else:
+            self.lastTick = currentTick
         if dir=="right":
             if(self.level.canMove(self.xPos + 1, self.yPos)):
                 self.xPos += 1
@@ -207,7 +216,6 @@ def game_main(music=True):
             elif event.type == KEYDOWN and event.key == K_ESCAPE:
                 running = False
                 break
-
             previous_position = cubert.rect.topleft
             cubert.update(event)  # Update Cubert.
 
