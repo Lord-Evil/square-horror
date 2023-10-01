@@ -8,8 +8,6 @@ floor_img = pygame.image.load(os.path.join(".", "art", "floor.png"))
 wall_img = pygame.image.load(os.path.join(".", "art", "wall.png"))
 
 cell_size = 50
-room_rib = 10
-room_size = cell_size * room_rib
 
 boardXOffset = 150
 boardYOffset = 50
@@ -27,14 +25,15 @@ class Level():
     def loadMap(self, mapName):
         with open(f'level{mapName}.map', 'r') as f:
             room_ribVal = f.read(3)
-            room_rib = int(f'0x{room_ribVal}', 0)
-            print(f"Setting up level size {room_rib}x{room_rib}")
+            self.room_rib = int(f'0x{room_ribVal}', 0)
+            self.room_size = cell_size * self.room_rib
+            print(f"Setting up level size {self.room_rib}x{self.room_rib}")
             self.cells = []
             y = 0
-            for i in range(room_rib):
+            for i in range(self.room_rib):
                 self.cells.append([])
                 x = 0
-                for j in range(room_rib):
+                for j in range(self.room_rib):
                     cellVal = str(f.read(1))
                     if cellVal == "C":
                         self.cubert = Cubert(self, x, y)  # Initialize Cubert.
@@ -61,10 +60,10 @@ class Level():
             for y in range(0, screen_size[1] + 1, cell_size):
                 self.screen.blit(wall_img, pygame.Rect(x, y, cell_size, cell_size))
         # Draw floor
-        for x in range(int((800 - room_size)/2), int((800 - room_size)/2) + room_size, cell_size):
-            for y in range(int((600 - room_size)/2), int((600 - room_size)/2) + room_size, cell_size):
+        for x in range(int((800 - self.room_size)/2), int((800 - self.room_size)/2) + self.room_size, cell_size):
+            for y in range(int((600 - self.room_size)/2), int((600 - self.room_size)/2) + self.room_size, cell_size):
                 self.screen.blit(floor_img, pygame.Rect(x, y, cell_size, cell_size))
-        pygame.draw.rect(self.screen, ("#ffffff"), ((800 - room_size)/2, (600 - room_size)/2, room_size, room_size), 3)
+        pygame.draw.rect(self.screen, ("#ffffff"), ((800 - self.room_size)/2, (600 - self.room_size)/2, self.room_size, self.room_size), 3)
 
         for obstacle in self.obstacles:
             self.screen.blit(obstacle["image"], obstacle["rect"].topleft)
@@ -144,7 +143,6 @@ class Cubert(pygame.sprite.Sprite):
         if event.type == KEYUP:
             if event.key == K_SPACE:
                 self.beCubert()
-
 
 def game_main(music=True):
     pygame.init()
