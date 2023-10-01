@@ -8,6 +8,8 @@ coin_img = pygame.image.load(os.path.join(".", "art", "coin.png"))
 coin_img = pygame.transform.scale(coin_img, (30, 30))
 floor_img = pygame.image.load(os.path.join(".", "art", "floor.png"))
 wall_img = pygame.image.load(os.path.join(".", "art", "wall.png"))
+bonusJ_img = pygame.image.load(os.path.join(".", "art", "jump_bonus.png"))
+bonusS_img = pygame.image.load(os.path.join(".", "art", "speed_bonus.png"))
 
 cell_size = 50
 
@@ -60,10 +62,12 @@ class Level():
                   self.putObstacle("obstacle", x, y)
                 elif cell == "M":
                     self.putCoin(x, y)
+                elif cell in ["J", "S"]:
+                    self.putBonus(cell, x, y)
                 x+=1
             y+=1
 
-    def putObstacle(self, type, x, y):
+    def putObstacle(self, obType, x, y):
         rect = pygame.Rect(*self.getCoords(x, y), cell_size, cell_size)
         self.screen.blit(obstacle_img, rect.topleft)
 
@@ -73,6 +77,14 @@ class Level():
         yCord += 10
         rect = pygame.Rect(xCord, yCord, cell_size-20, cell_size-20)
         self.screen.blit(coin_img, rect.topleft)
+    def putBonus(self, bonusType, x, y):
+        if bonusType == "J":
+            rect = pygame.Rect(*self.getCoords(x, y), cell_size, cell_size)
+            self.screen.blit(bonusJ_img, rect.topleft)
+        elif bonusType == "S":
+            rect = pygame.Rect(*self.getCoords(x, y), cell_size, cell_size)
+            self.screen.blit(bonusS_img, rect.topleft)
+            pass
 
     def draw(self):
         # Draw walls
@@ -217,10 +229,9 @@ def game_main(music=True):
     pygame.display.set_icon(icon)
     
     sound = pygame.mixer.music.load(os.path.join(".", "sounds", "game.ogg"))
+    #sound = pygame.mixer.Sound(os.path.join(".", "sounds", "game.ogg"))
     if music:
         pygame.mixer.music.play(loops=-1)
-    # sound = pygame.mixer.Sound(os.path.join(".", "sounds", "game.ogg"))
-    # sound.play(loops=5)
 
     screen = pygame.display.set_mode(screen_size)
     pygame.key.set_repeat(200)
@@ -255,4 +266,4 @@ def game_main(music=True):
     pygame.quit()
 
 if __name__ == "__main__":
-    game_main(False)
+    game_main(True)
