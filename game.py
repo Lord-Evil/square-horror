@@ -18,7 +18,7 @@ MARKER_BONUS_SPEED = "S"
 
 obstacle_img = pygame.image.load(os.path.join(".", "art", "obstacle.png"))
 coin_img = pygame.image.load(os.path.join(".", "art", "coin.png"))
-block_img = pygame.image.load(os.path.join(".", "art", "wall.png"))
+block_img = pygame.image.load(os.path.join(".", "art", "block.png"))
 floor_img = pygame.image.load(os.path.join(".", "art", "floor.png"))
 wall_img = pygame.image.load(os.path.join(".", "art", "wall.png"))
 bonusJ_img = pygame.image.load(os.path.join(".", "art", "jump_bonus.png"))
