@@ -23,7 +23,7 @@ class Level():
         self.loadMap(level)
 
     def loadMap(self, mapName):
-        with open(f'level{mapName}.map', 'r') as f:
+        with open(f'levels/level{mapName}.map', 'r') as f:
             room_ribVal = f.read(3)
             self.room_rib = int(f'0x{room_ribVal}', 0)
             self.room_size = cell_size * self.room_rib
@@ -147,6 +147,10 @@ class Cubert(pygame.sprite.Sprite):
 def game_main(music=True):
     pygame.init()
     pygame.mixer.init()
+    pygame.display.set_caption('Horror Cube')
+    icon = pygame.image.load('art/cubert-circle.png')
+    pygame.display.set_icon(icon)
+
     sound = pygame.mixer.music.load(os.path.join(".", "sounds", "game.ogg"))
     if music:
         pygame.mixer.music.play(loops=-1)
