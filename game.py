@@ -283,7 +283,7 @@ class Timer():
 
     def draw(self):
         timePast = int((pygame.time.get_ticks() - self.startTime)/1000)
-        if self.seconds-timePast <= 0:
+        if self.seconds-timePast < 0:
             self.stop()
             message = "Game Over"
         else:
