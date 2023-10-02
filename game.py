@@ -411,6 +411,9 @@ def game_main(music=True):
 
     running = True
 
+    coins_to_win = 80 # in %
+    coins_to_lose = 100 - coins_to_win # in %
+
     seconds_for_block = 10
     block_lvl=0
     last_block_time = 0
@@ -436,8 +439,8 @@ def game_main(music=True):
                     cubert.draw()
                 elif(menu.wait and event.type == KEYDOWN and event.key == K_RETURN):  # restart game (for: finish, dead menu)
                     game_main(True)
-
-                if(level.coins == level.coinCounter.counter):  # eat all coin, finish
+                    
+                if(level.coinCounter.counter >= level.coins * coins_to_win // 100):  # eat all coin, finish
                     menu.finish_menu()
                     timer.stop(win=True)
                 
@@ -447,7 +450,7 @@ def game_main(music=True):
             menu.dead_menu()
             timer.stop(win=False)
         
-        if(level.coinCounter.lost > 0):
+        if(level.coinCounter.lost > (level.coins * coins_to_lose // 100)):
             menu.lost_money_dead_menu()
             timer.stop(win=False)
 
