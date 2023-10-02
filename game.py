@@ -13,7 +13,11 @@ MARKER_OBSCALETE = "X"
 MARKER_COIN = "M"
 MARKER_EMPTY = "O"
 MARKER_CUBERT = "C"
+
 MARKER_DOOR = "D"
+MARKER_DOOR_LEFT = "L"
+MARKER_DOOR_RIGHT = "R"
+
 MARKER_BONUS_JUMP = "J"
 MARKER_BONUS_SPEED = "S"
 
@@ -27,8 +31,13 @@ wall_img = pygame.image.load(os.path.join(".", "art", "wall.png"))
 bonusJ_img = pygame.image.load(os.path.join(".", "art", "jump_bonus.png"))
 bonusS_img = pygame.image.load(os.path.join(".", "art", "speed_bonus.png"))
 
-door_closed_img = pygame.image.load(os.path.join(".", "art", "door_closed.png"))
-door_open_img = pygame.image.load(os.path.join(".", "art", "door_opened.png"))
+door_closed_img = pygame.image.load(os.path.join(".", "art", "door_closed_l.png")) # temp. replace path
+door_left_closed_img = pygame.image.load(os.path.join(".", "art", "door_closed_l.png"))
+door_right_closed_img = pygame.image.load(os.path.join(".", "art", "door_closed_r.png"))
+
+door_open_img = pygame.image.load(os.path.join(".", "art", "door_opened_l.png")) # temp. replace path
+door_left_open_img = pygame.image.load(os.path.join(".", "art", "door_opened_l.png"))
+door_right_open_img = pygame.image.load(os.path.join(".", "art", "door_opened_r.png"))
 
 death_snd = pygame.mixer.Sound(os.path.join(".", "sounds", "death.ogg"))
 coin_snd = pygame.mixer.Sound(os.path.join(".", "sounds", "coin.ogg"))
@@ -115,8 +124,8 @@ class Level():
                     self.putBonus(cell, x, y)
                 elif cell == MARKER_BLOCK:
                     self.putBlock(x, y)
-                elif cell == MARKER_DOOR:
-                    self.putDoor(x, y)
+                elif cell in [MARKER_DOOR_LEFT, MARKER_DOOR_RIGHT, MARKER_DOOR]:
+                    self.putDoor(cell, x, y)
                 x+=1
             y+=1
 
@@ -142,15 +151,26 @@ class Level():
         self.screen.blit(block_img, rect.topleft)
     
     def isDoor(self, x, y):
-        return self.cells[y][x] == MARKER_DOOR
+        return self.cells[y][x] in (MARKER_DOOR_LEFT, MARKER_DOOR_RIGHT, MARKER_DOOR)
 
-    def putDoor(self, x, y):
+    def putDoor(self, cell, x, y):
         rect = pygame.Rect(*self.getCoords(x, y), cell_size, cell_size)
         if self.open_door:
-            self.screen.blit(door_open_img, rect.topleft)
+            if cell == MARKER_DOOR_LEFT:
+                img = door_left_open_img
+            elif cell == MARKER_DOOR_RIGHT:
+                img = door_right_open_img
+            else:
+                img = door_open_img
         else:
-            self.screen.blit(door_closed_img, rect.topleft)
+            if cell == MARKER_DOOR_LEFT:
+                img = door_left_closed_img
+            elif cell == MARKER_DOOR_RIGHT:
+                img = door_right_closed_img
+            else:
+                img = door_closed_img
 
+        self.screen.blit(img, rect.topleft)
     def draw(self):
         # Draw walls
         for x in range(0, screen_size[0] + 1, cell_size):
@@ -425,7 +445,7 @@ def game_main(music=True):
     level = Level(screen, "01")
     cubert = level.getCubert()
 
-    start_seconds = 30
+    start_seconds = 50
     timer = Timer(screen, start_seconds)
 
     timer.start()
