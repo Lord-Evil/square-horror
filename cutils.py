@@ -7,23 +7,11 @@ def find_cells_on_level(matrix, lvl):
 
     level_cells = []
 
-    # Верхняя горизонталь
-    for col in range(lvl, cols - lvl):
-        level_cells.append((lvl, col))
-
-    # Правая вертикаль
-    for row in range(lvl + 1, rows - lvl):
-        level_cells.append((row, cols - lvl - 1))
-
-    # Нижняя горизонталь
-    if lvl * 2 < rows:
-        for col in range(cols - lvl - 2, lvl - 1, -1):
-            level_cells.append((rows - lvl - 1, col))
-
-    # Левая вертикаль
-    if lvl * 2 < cols:
-        for row in range(rows - lvl - 2, lvl, -1):
-            level_cells.append((row, lvl))
+    for row in range(rows):
+        for col in range(cols):
+            if col == lvl:
+                level_cells.append((row, col))       # left
+                level_cells.append((row, -(col+1)))  # right
 
     return level_cells
 
