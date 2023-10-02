@@ -30,7 +30,13 @@ def find_cells_on_level(matrix, lvl):
 
 
 def set_cells_to_value(matrix, lvl, value):
+    replaced_cells = {}
     level_cells = find_cells_on_level(matrix, lvl)
     for row, col in level_cells:
+        if replaced_cells.get(matrix[row][col]):
+            replaced_cells[matrix[row][col]] += 1
+        else:
+            replaced_cells[matrix[row][col]] = 1;  
+        
         matrix[row][col] = value
-    return matrix
+    return (matrix, replaced_cells)

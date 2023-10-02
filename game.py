@@ -41,6 +41,7 @@ class CoinCounter():
     def __init__(self, screen):
         self.screen = screen
         self.counter = 0
+        self.lost = 0
         self.font = pygame.font.Font('kongtext.ttf', 24)
         self.text = self.font.render('00:00', True, "#222034", "#cbdbfc")
         self.textRect = self.text.get_rect()
@@ -177,7 +178,13 @@ class Level():
     
     def block_fields(self, lvl):
         block_marker = MARKER_BLOCK
-        new_matrix = set_cells_to_value(self.cells, lvl=lvl, value=block_marker)
+        result = set_cells_to_value(self.cells, lvl=lvl, value=block_marker)
+        new_matrix = result[0]
+        replaced_cells = result[1]
+
+        if MARKER_COIN in replaced_cells:
+            self.coinCounter.lost += replaced_cells[MARKER_COIN]
+
         self.cells = new_matrix
 
 
@@ -316,15 +323,16 @@ class Timer():
             channel = death_snd.play()
 
     def draw(self):
-        timePast = int((pygame.time.get_ticks() - self.startTime)/1000)
-        if self.seconds-timePast < 0:
-            self.stop()
-            message = "Game Over"
-        else:
-            self.left_time = self.seconds-timePast
-            minutes, seconds = divmod(self.seconds-timePast, 60)
-            message = "%02d:%02d" % (minutes, seconds)
-        self.text = self.font.render(message, True, "#222034", "#cbdbfc")
+        if self.running:
+            timePast = int((pygame.time.get_ticks() - self.startTime)/1000)
+            if self.seconds-timePast < 0:
+                self.stop()
+                self.message = "Game Over"
+            else:
+                self.left_time = self.seconds-timePast
+                minutes, seconds = divmod(self.seconds-timePast, 60)
+                self.message = "%02d:%02d" % (minutes, seconds)
+        self.text = self.font.render(self.message, True, "#222034", "#cbdbfc")
         self.screen.blit(self.text, self.textRect)
 
 class Menu:
@@ -348,11 +356,20 @@ class Menu:
 
     def dead_menu(self):
         self.wait = True
-        self.message = "TIME LEFT. YOU DEAD"
+        self.message = "TIME`S UP. YOU DEAD"
 
         self.text = self.font.render(self.message, True, "#222034", "#cbdbfc")
         self.textRect = self.text.get_rect()
         self.textRect.center = (400, 300)
+    
+    def lost_money_dead_menu(self):
+        self.wait = True
+        self.message = "COINS ARE LOST. YOU DIED POOR"
+
+        self.text = self.font.render(self.message, True, "#222034", "#cbdbfc")
+        self.textRect = self.text.get_rect()
+        self.textRect.center = (400, 300)
+
     
     def pause_menu():
         ...
@@ -368,7 +385,7 @@ class Menu:
 
 
 def game_main(music=True):
-    pygame.display.set_caption('Horror Cube')
+    pygame.display.set_caption('Square Horror')
     icon = pygame.image.load('art/cubert-speed-circle.png')
     pygame.display.set_icon(icon)
     
@@ -422,12 +439,17 @@ def game_main(music=True):
 
                 if(level.coins == level.coinCounter.counter):  # eat all coin, finish
                     menu.finish_menu()
+                    timer.stop(win=True)
                 
 
 
         if(not timer.running and not menu.wait):
             menu.dead_menu()
-            timer.stop(win=True)
+            timer.stop(win=False)
+        
+        if(level.coinCounter.lost > 0):
+            menu.lost_money_dead_menu()
+            timer.stop(win=False)
 
         cubert.draw()
 
