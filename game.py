@@ -39,8 +39,10 @@ door_open_img = pygame.image.load(os.path.join(".", "art", "door_opened_l.png"))
 door_left_open_img = pygame.image.load(os.path.join(".", "art", "door_opened_l.png"))
 door_right_open_img = pygame.image.load(os.path.join(".", "art", "door_opened_r.png"))
 
-death_snd = pygame.mixer.Sound(os.path.join(".", "sounds", "death.ogg"))
-coin_snd = pygame.mixer.Sound(os.path.join(".", "sounds", "coin.ogg"))
+death_snd = pygame.mixer.Sound(os.path.join(".", "sounds", "death.wav"))
+coin_snd = pygame.mixer.Sound(os.path.join(".", "sounds", "coin.wav"))
+bonusS_snd = pygame.mixer.Sound(os.path.join(".", "sounds", "speedup.wav"))
+bonusJ_snd = pygame.mixer.Sound(os.path.join(".", "sounds", "jump.wav"))
 
 
 
@@ -298,9 +300,11 @@ class Cubert(pygame.sprite.Sprite):
         if circleType == MARKER_BONUS_SPEED:
             self.image = self.skins["speed-circle"]
             self.speedBonusStart = int(pygame.time.get_ticks()/1000)
+            bonusS_snd.play(0)
         elif circleType == MARKER_BONUS_JUMP:
             self.image = self.skins["jump-circle"]
             self.jumpBonusStart = int(pygame.time.get_ticks()/1000)
+            bonusJ_snd.play(0)
 
         self.rect = self.image.get_rect(center=self.rect.center)
 
@@ -433,8 +437,8 @@ def game_main(music=True):
     icon = pygame.image.load('art/cubert-speed-circle.png')
     pygame.display.set_icon(icon)
     
-    sound = pygame.mixer.music.load(os.path.join(".", "sounds", "background.ogg"))
-    #sound = pygame.mixer.Sound(os.path.join(".", "sounds", "game.ogg"))
+    sound = pygame.mixer.music.load(os.path.join(".", "sounds", "background.wav"))
+    #sound = pygame.mixer.Sound(os.path.join(".", "sounds", "game.wav"))
     if music:
         pygame.mixer.music.play(-1)
 
