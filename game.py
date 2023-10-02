@@ -13,7 +13,7 @@ MARKER_OBSCALETE = "X"
 MARKER_COIN = "M"
 MARKER_EMPTY = "O"
 MARKER_CUBERT = "C"
-
+MARKER_DOOR = "D"
 MARKER_BONUS_JUMP = "J"
 MARKER_BONUS_SPEED = "S"
 
@@ -27,8 +27,13 @@ wall_img = pygame.image.load(os.path.join(".", "art", "wall.png"))
 bonusJ_img = pygame.image.load(os.path.join(".", "art", "jump_bonus.png"))
 bonusS_img = pygame.image.load(os.path.join(".", "art", "speed_bonus.png"))
 
+door_closed_img = pygame.image.load(os.path.join(".", "art", "door_closed.png"))
+door_open_img = pygame.image.load(os.path.join(".", "art", "door_opened.png"))
+
 death_snd = pygame.mixer.Sound(os.path.join(".", "sounds", "death.ogg"))
 coin_snd = pygame.mixer.Sound(os.path.join(".", "sounds", "coin.ogg"))
+
+
 
 cell_size = 50
 
@@ -61,6 +66,8 @@ class Level():
     cells = None
     def __init__(self, screen, level="01"):
         self.coins = 0
+        self.open_door = False
+        self.complete = False
         self.screen = screen
         self.coinCounter = CoinCounter(screen)
         self.loadMap(level)
@@ -108,6 +115,8 @@ class Level():
                     self.putBonus(cell, x, y)
                 elif cell == MARKER_BLOCK:
                     self.putBlock(x, y)
+                elif cell == MARKER_DOOR:
+                    self.putDoor(x, y)
                 x+=1
             y+=1
 
@@ -131,6 +140,16 @@ class Level():
     def putBlock(self, x, y):
         rect = pygame.Rect(*self.getCoords(x, y), cell_size, cell_size)
         self.screen.blit(block_img, rect.topleft)
+    
+    def isDoor(self, x, y):
+        return self.cells[y][x] == MARKER_DOOR
+
+    def putDoor(self, x, y):
+        rect = pygame.Rect(*self.getCoords(x, y), cell_size, cell_size)
+        if self.open_door:
+            self.screen.blit(door_open_img, rect.topleft)
+        else:
+            self.screen.blit(door_closed_img, rect.topleft)
 
     def draw(self):
         # Draw walls
@@ -241,12 +260,17 @@ class Cubert(pygame.sprite.Sprite):
             if(self.level.canMove(self.xPos, self.yPos + 1)):
                 self.yPos += 1
                 self.rect.move_ip(0, cell_size)
-        if self.level.isCoin(self.xPos, self.yPos):
+        if (self.level.isCoin(self.xPos, self.yPos)):
             self.level.eatCoin(self.xPos, self.yPos)
         if (self.level.isBonus(self.xPos, self.yPos) and not self.is_circle):
             bonus = self.level.eatBonus(self.xPos, self.yPos)
             if bonus == MARKER_BONUS_SPEED: self.beCircle(MARKER_BONUS_SPEED)
             if bonus == MARKER_BONUS_JUMP: self.beCircle(MARKER_BONUS_JUMP)
+        if (self.level.isDoor(self.xPos, self.yPos)):
+            if self.level.open_door:
+                self.level.complete = True
+            else:
+                ... # sound closed door
 
 
     def beCircle(self, circleType="S"):
@@ -439,8 +463,11 @@ def game_main(music=True):
                     cubert.draw()
                 elif(menu.wait and event.type == KEYDOWN and event.key == K_RETURN):  # restart game (for: finish, dead menu)
                     game_main(True)
-                    
+
                 if(level.coinCounter.counter >= level.coins * coins_to_win // 100):  # eat all coin, finish
+                    level.open_door = True
+
+                if(level.complete):
                     menu.finish_menu()
                     timer.stop(win=True)
                 
