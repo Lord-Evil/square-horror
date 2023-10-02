@@ -400,7 +400,7 @@ class Menu:
 
     def dead_menu(self):
         self.wait = True
-        self.message = "TIME`S UP. YOU DEAD"
+        self.message = "TIME`S UP. YOU`RE DEAD"
 
         self.text = self.font.render(self.message, True, "#222034", "#cbdbfc")
         self.textRect = self.text.get_rect()
@@ -445,7 +445,7 @@ def game_main(music=True):
     level = Level(screen, "01")
     cubert = level.getCubert()
 
-    start_seconds = 50
+    start_seconds = 35
     timer = Timer(screen, start_seconds)
 
     timer.start()
@@ -458,7 +458,7 @@ def game_main(music=True):
     coins_to_win = 80 # in %
     coins_to_lose = 100 - coins_to_win # in %
 
-    seconds_for_block = 10
+    seconds_for_block = 7
     block_lvl=0
     last_block_time = 0
 
